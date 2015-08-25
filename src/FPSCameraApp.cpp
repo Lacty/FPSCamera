@@ -127,7 +127,9 @@ void FPSCameraApp::warpMousePos() {
     pos.y = mouse_current.y;
     mouse_last.x = pos.x;
     mouse_last.y = pos.y;
+    CGAssociateMouseAndMouseCursorPosition(0);
     CGWarpMouseCursorPosition(pos);
+    CGAssociateMouseAndMouseCursorPosition(1);
   }
   else
   if (mouse_current.x <= 0) {
@@ -135,7 +137,9 @@ void FPSCameraApp::warpMousePos() {
     pos.y = mouse_current.y;
     mouse_last.x = pos.x;
     mouse_last.y = pos.y;
+    CGAssociateMouseAndMouseCursorPosition(0);
     CGWarpMouseCursorPosition(pos);
+    CGAssociateMouseAndMouseCursorPosition(1);
   }
 }
 
