@@ -14,11 +14,11 @@ class FPSCameraApp : public AppNative {
 private:
   Font font;
   
-  CGSize  moniter;
+  CGSize  monitor;
   CGPoint center;
-  CGPoint mouse;
   
-  bool isActive;
+  Vec2i mouse_current;
+  Vec2i mouse_last;
   
   CameraPersp camera;
   Vec3f eye;
@@ -29,6 +29,8 @@ private:
   Vec2f difference;
   
   float angle;
+  
+  void warpMousePos();
   
 public:
   void setup() override;
@@ -49,14 +51,12 @@ void FPSCameraApp::setup() {
   setFullScreen(true);
   
   // モニターのサイズを取得
-  moniter.width  = CGDisplayPixelsWide(0);
-  moniter.height = CGDisplayPixelsHigh(0);
+  monitor.width  = CGDisplayPixelsWide(0);
+  monitor.height = CGDisplayPixelsHigh(0);
   
   // モニターの中点を割り出す
-  center.x = moniter.width  / 2;
-  center.y = moniter.height / 2;
-  
-  isActive = true;
+  center.x = monitor.width  / 2;
+  center.y = monitor.height / 2;
   
   camera = CameraPersp(getWindowWidth(), getWindowHeight(), 60.0f, 0.5f, 600.0f);
   eye = Vec3f::zero();
@@ -76,36 +76,34 @@ void FPSCameraApp::prepareSettings(Settings* settings) {
   settings->disableFrameRate();
 }
 
-void FPSCameraApp::mouseMove(MouseEvent event) {
-  console() << getMousePos() << endl;
-  event.getX();
-}
+void FPSCameraApp::mouseMove(MouseEvent event) {}
 
 void FPSCameraApp::mouseDown(MouseEvent event) {}
 
 void FPSCameraApp::keyDown(KeyEvent event) {
-  isActive = isActive ? false : true;
+  quit();
 }
 
 void FPSCameraApp::update() {
-  //direction = camera.getViewDirection();
-  
   showCursor();
-  if (!isActive) return;
   // カーソルを非表示に設定
   //hideCursor();
   
-  // カールを中央に移動
-  if ((center.x != getMousePos().x)/* || (center.y != getMousePos().y)*/) {
-    difference.x = getMousePos().x - center.x;
-    
-    angle += difference.x * 0.01f;
-    
-    Quatf orientation = Quatf(Vec3f::yAxis(), angle);
-    camera.setOrientation(orientation);
-    
-    CGWarpMouseCursorPosition(center);
-  }
+  
+  mouse_current = getMousePos();
+  
+  difference.x = mouse_current.x - mouse_last.x;
+  
+  angle += difference.x * 0.001;
+  
+  Quatf orientation = Quatf(Vec3f::yAxis(), angle);
+  camera.setOrientation(orientation);
+  
+  mouse_last = mouse_current;
+  
+  
+  // カーソルを移動
+  warpMousePos();
 }
 
 void FPSCameraApp::draw() {
@@ -119,6 +117,26 @@ void FPSCameraApp::draw() {
   gl::popModelView();
   
   gl::drawCube(Vec3f(0, 0, 300), Vec3f(50, 50, 50));
+}
+
+
+void FPSCameraApp::warpMousePos() {
+  CGPoint pos;
+  if (mouse_current.x >= monitor.width) {
+    pos.x = 1;
+    pos.y = mouse_current.y;
+    mouse_last.x = pos.x;
+    mouse_last.y = pos.y;
+    CGWarpMouseCursorPosition(pos);
+  }
+  else
+  if (mouse_current.x <= 0) {
+    pos.x = monitor.width - 1;
+    pos.y = mouse_current.y;
+    mouse_last.x = pos.x;
+    mouse_last.y = pos.y;
+    CGWarpMouseCursorPosition(pos);
+  }
 }
 
 CINDER_APP_NATIVE(FPSCameraApp, RendererGl)
