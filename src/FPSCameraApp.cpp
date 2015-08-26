@@ -28,7 +28,7 @@ private:
   
   Vec2f difference;
   
-  float angle;
+  Vec2f angle;
   
   void warpMousePos();
   
@@ -66,7 +66,7 @@ void FPSCameraApp::setup() {
   camera.setViewDirection(direction.normalized());
   camera.setWorldUp(Vec3f::yAxis());
   
-  angle = 0;
+  angle = Vec2f::zero();
   
   gl::enableAlphaBlending();
   glBlendFunc(GL_SRC0_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -90,16 +90,12 @@ void FPSCameraApp::update() {
   //hideCursor();
   
   
-  mouse_current = getMousePos();
+  difference.x = getMousePos().x - center.x;
   
-  difference.x = mouse_current.x - mouse_last.x;
+  angle.x += difference.x * 0.001;
   
-  angle += difference.x * 0.001;
-  
-  Quatf orientation = Quatf(Vec3f::yAxis(), angle);
+  Quatf orientation = Quatf(Vec3f::yAxis(), angle.x);
   camera.setOrientation(orientation);
-  
-  mouse_last = mouse_current;
   
   
   // カーソルを移動
@@ -121,26 +117,9 @@ void FPSCameraApp::draw() {
 
 
 void FPSCameraApp::warpMousePos() {
-  CGPoint pos;
-  if (mouse_current.x >= monitor.width) {
-    pos.x = 1;
-    pos.y = mouse_current.y;
-    mouse_last.x = pos.x;
-    mouse_last.y = pos.y;
-    CGAssociateMouseAndMouseCursorPosition(0);
-    CGWarpMouseCursorPosition(pos);
-    CGAssociateMouseAndMouseCursorPosition(1);
-  }
-  else
-  if (mouse_current.x <= 0) {
-    pos.x = monitor.width - 1;
-    pos.y = mouse_current.y;
-    mouse_last.x = pos.x;
-    mouse_last.y = pos.y;
-    CGAssociateMouseAndMouseCursorPosition(0);
-    CGWarpMouseCursorPosition(pos);
-    CGAssociateMouseAndMouseCursorPosition(1);
-  }
+  CGAssociateMouseAndMouseCursorPosition(0);
+  CGWarpMouseCursorPosition(center);
+  CGAssociateMouseAndMouseCursorPosition(1);
 }
 
 CINDER_APP_NATIVE(FPSCameraApp, RendererGl)
