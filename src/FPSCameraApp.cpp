@@ -3,8 +3,11 @@
 #include "cinder/gl/gl.h"
 
 #include "cinder/Camera.h"
+#include "cinder/Matrix.h"
 
 #include <ApplicationServices/ApplicationServices.h>
+
+#define PI 3.14159265358979
 
 using namespace ci;
 using namespace ci::app;
@@ -66,7 +69,7 @@ void FPSCameraApp::setup() {
   camera.setViewDirection(direction.normalized());
   camera.setWorldUp(Vec3f::yAxis());
   
-  angle = Vec2f::zero();
+  angle = Vec2f(PI, PI);
   
   gl::enableAlphaBlending();
   glBlendFunc(GL_SRC0_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -90,12 +93,26 @@ void FPSCameraApp::update() {
   //hideCursor();
   
   
+  // カメラ横振り
   difference.x = getMousePos().x - center.x;
   
-  angle.x += difference.x * 0.001;
+  angle.x -= difference.x * 0.001;
   
   Quatf orientation = Quatf(Vec3f::yAxis(), angle.x);
   camera.setOrientation(orientation);
+  
+  
+  // カメラ縦振り
+  difference.y = center.y - getMousePos().y;
+  
+  angle.y -= difference.y * 0.001;
+  
+  orientation = Quatf(Vec3f::yAxis().cross(camera.getViewDirection()), angle.y);
+  camera.setOrientation(orientation);
+  
+  
+  // カメラを上むきにする
+  camera.setWorldUp(Vec3f::yAxis());
   
   
   // カーソルを移動
@@ -114,7 +131,6 @@ void FPSCameraApp::draw() {
   
   gl::drawCube(Vec3f(0, 0, 300), Vec3f(50, 50, 50));
 }
-
 
 void FPSCameraApp::warpMousePos() {
   CGAssociateMouseAndMouseCursorPosition(0);
